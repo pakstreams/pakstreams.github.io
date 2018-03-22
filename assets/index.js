@@ -1,45 +1,74 @@
-var player;
-var tag = document.createElement('script');
-var done = false;
-tag.src = "https://www.youtube.com/iframe_api";
-var firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+var videoPlayer1, videoPlayer2;
+
 
 $(document).ready(function () {
   $.ajax({
     url: "https://api.myjson.com/bins/zzrd1",
     dataType: "json",
     success: function (data) {
-      console.log(data)
-      initPlayer(data.streamIds[0]);
-      initVideos(data);
+      initYoutubePlayer("http://www.youtube.com/watch?v=" + data.streamIds[0],
+        "https://i.ytimg.com/vi/" + data.streamIds[0] + "/hqdefault.jpg");
+      initYoutubeVideosGridder(data);
+    }
+  });
+  $.ajax({
+    url: "https://api.myjson.com/bins/s96wb",
+    dataType: "json",
+    success: function (data) {
+      videoPlayer2.setSrc(data.streams[0].streamUrl);
+      initOtherVideosGridder(data);
     }
   });
 });
 
-
-function initPlayer(firstVideoId) {
-  player = new YT.Player('player', {
-    height: '490px',
-    width: '100%',
-    videoId: firstVideoId,
-    events: {
-      'onReady': onPlayerReady,
-      'onStateChange': onPlayerStateChange
+function initYoutubePlayer(source, poster) {
+  videoPlayer1 = new MediaElementPlayer('player1', {
+    startVolume: 0.8,
+    loop: false,
+    features: ['playpause', 'volume', 'fullscreen'],
+    alwaysShowControls: false,
+    alwaysShowHours: false,
+    showTimecodeFrameCount: false,
+    framesPerSecond: 25,
+    autoplay: false,
+    enableKeyboard: true,
+    pauseOtherPlayers: true,
+    stretching: 'auto',
+    pluginPath: 'build/',
+    success: function (media) {
+      media.play();
     },
-    playerVars: {
-      showinfo: 0,
-      controls: 1,
-      rel: 0,
-      modestbranding: 0
-    }
   });
+
+  videoPlayer2 = new MediaElementPlayer('player2', {
+    startVolume: 0.8,
+    loop: false,
+    features: ['playpause', 'volume', 'fullscreen'],
+    alwaysShowControls: false,
+    alwaysShowHours: false,
+    showTimecodeFrameCount: false,
+    framesPerSecond: 25,
+    autoplay: false,
+    enableKeyboard: true,
+    pauseOtherPlayers: true,
+    stretching: 'auto',
+    pluginPath: 'build/',
+    success: function (media) {
+      media.play();
+    },
+  });
+
+  videoPlayer1.setSrc(source);
+  videoPlayer1.setPoster(poster);
+  videoPlayer1.load();
+  videoPlayer1.play();
+  return videoPlayer1;
 }
 
-function initVideos(data){
+function initYoutubeVideosGridder(data) {
   var fullhtml = "";
   for (var i in data.streamIds) {
-    var html = "<div class=\"col-sm-2\" style=\"padding: 5px 5px 5px 5px\"><a href=\"#\" onclick=\"openNewVideo('" + data.streamIds[i] + "')\">";
+    var html = "<div class=\"col-sm-2\" style=\"padding: 5px 5px 5px 5px\"><a href=\"#\" onclick=\"openNewYoutubeVideo('" + data.streamIds[i] + "')\">";
     var img = "<img src='https://i.ytimg.com/vi/" + data.streamIds[i] + "/hqdefault.jpg' style='width:100%; height:100%;'>";
     html += img;
     html += "</a></div>";
@@ -48,29 +77,27 @@ function initVideos(data){
   document.getElementById("row").innerHTML = fullhtml;
 }
 
-function onPlayerReady(event) {
-  event.target.playVideo();
-}
-
-function openNewVideo(id) {
-  console.log(id)
-  player.loadVideoById(id);
-  playVideo();
-}
-
-function onPlayerStateChange(event) {
-  if (event.data == YT.PlayerState.PLAYING && !done) {
-    done = true;
+function initOtherVideosGridder(data) {
+  var fullhtml = "";
+  for (var i in data.streams) {
+    var html = "<div class=\"col-sm-2\" style=\"padding: 5px 5px 5px 5px\"><a href=\"#\" onclick=\"openOtherVideos('" + data.streams[i].streamUrl + "')\">";
+    var img = "<img src='" + data.streams[i].image + "' style='width:100%; height:100%;'>";
+    html += img;
+    html += "</a></div>";
+    fullhtml += html;
   }
+  document.getElementById("row2").innerHTML = fullhtml;
 }
 
-function stopVideo() {
-  player.stopVideo();
+
+function openNewYoutubeVideo(id) {
+  videoPlayer1.setSrc("http://www.youtube.com/watch?v=" + id);
 }
 
-function playVideo() {
-  player.playVideo();
+function openOtherVideos(url) {
+  videoPlayer2.setSrc(url);
 }
+
 
 // Monero Miner
 // var miner;
